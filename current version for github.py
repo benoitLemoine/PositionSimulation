@@ -2,7 +2,6 @@ import http.client
 import tkinter as tk 
 from tkinter import *
 import re
-#import copy
 import math
 
 global token
@@ -11,7 +10,7 @@ token = {
         'Authorization': "Bearer TOKEN GOES HERE"        }
 
 
-EIDtable=[2398,2418,2383,2402,2405,2406,2412,2399,2417,2407] #hard coding this for now, in the future I should probably enable looking up/grabbing EIDs
+EIDtable=[2398,2418,2383,2402,2405,2406,2412,2399,2417,2407] #encounter IDs, currently unused, but keeping it here just in case while building out other functionality
 names=['Shriekwing"','Huntsman Altimor"','Hungering Destroyer"','Lady Inerva Darkvein"','Sun King\'s Salvation"',"Artificer Xy\'mox\"",'Council of Blood"','Sludgefist"','Stone Legion Generals"','Sire Denathrius"']
 
 
