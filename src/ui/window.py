@@ -1,11 +1,12 @@
-import queue
+from __future__ import annotations
+
 import tkinter as tk
 from typing import List
 
 from auth.connection import WLogConnection
 from client_identity import ID, SECRET
 from data.fights import Fight
-from ui.task import AsyncTask
+from ui.handler import FetchFightsHandler
 
 # FIXME: temporary url for fast testing
 URL = "https://www.warcraftlogs.com/reports/ZmXtTNkbAxjvf1P6#fight=27&type=damage-done"
@@ -22,6 +23,9 @@ class MainWindow(tk.Frame):
         self._setup_ui()
         self._connection = None
 
+        # FIXME: remove this line when client_id and client_secret will not be hardcoded
+        _ = self.connection
+
     def _setup_ui(self):
         self._parent.geometry('650x600')
 
@@ -36,7 +40,7 @@ class MainWindow(tk.Frame):
         self._url_entry.pack()
         self._url_entry.place(x=80, y=1)
 
-        grab_log_button = tk.Button(self._parent, text="Grab Log", command=self._handler_button)
+        grab_log_button = tk.Button(self._parent, text="Grab Log", command=FetchFightsHandler(self))
         grab_log_button.pack()
         grab_log_button.place(x=385)
 
@@ -46,21 +50,8 @@ class MainWindow(tk.Frame):
             self._connection = WLogConnection(client_id=ID, client_secret=SECRET)
         return self._connection
 
-    def _handler_button(self):
-        url = self._url_entry.get()
-        self.task = AsyncTask(function=self.connection.get_fights, args=(url,))
-        self.task.start()
-        self.after(20, self._loop_encounters_fetch)
+    def get_url(self) -> str:
+        return self._url_entry.get()
 
-    def _loop_encounters_fetch(self):
-        if self.task.is_alive():
-            self.after(20, self._loop_encounters_fetch)
-            return
-
-        else:
-            try:
-                fights: List[Fight] = self.task.get()
-                self._choice_list.set([fight.name for fight in fights])
-            except queue.Empty:
-                # TODO: handle when queue is empty
-                print("queue is empty")
+    def set_encounters_list(self, fights: List[Fight]):
+        self._choice_list.set([fight.name for fight in fights])

@@ -3,7 +3,9 @@ from typing import List
 import requests
 from requests import Session
 
+from auth.query import QueryFights
 from data.fights import Fight
+from utils import url_to_report_code
 
 
 class WLogConnection:
@@ -31,39 +33,25 @@ class WLogConnection:
 
         return response.json()["access_token"]
 
-    @staticmethod
-    def _get_code_from_url(url: str):
-        return url.split('https://www.warcraftlogs.com/reports/')[1].split("#")[0]
+    def get(self, **kwargs) -> requests.Response:
+        return self._session.get(url=self._api_url, **kwargs)
+
+    def post(self, **kwargs) -> requests.Response:
+        return self._session.post(url=self._api_url, headers=self._headers, **kwargs)
 
     def get_fights(self, report_url: str) -> List[Fight]:
-        query = """
-            query ($code: String!){
-                reportData {
-                    report(code: $code){
-                        fights(killType:Kills){
-                            name 
-                            difficulty
-                            startTime 
-                            endTime 
-                            encounterID
-                  }
-                }
-              }
-            }
-        """
-
-        variables = {
-            "code": self._get_code_from_url(url=report_url)
-        }
-
-        response = requests.post(self._api_url, headers=self._headers, json={"query": query, "variables": variables})
+        code = url_to_report_code(url=report_url)
+        query = QueryFights(code=code)
+        response = query.execute(connection=self)
         response_json = response.json()
 
         fights = []
         for d_fight in response_json["data"]["reportData"]["report"]["fights"]:
             fight = Fight(**d_fight)
 
-            if fight.difficulty == 5:
+            if fight.difficulty in [3, 4, 5]:
                 fights.append(fight)
 
         return fights
+
+
